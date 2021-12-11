@@ -386,7 +386,7 @@ public sealed class ZenGoService
 
         foreach (var player in players)
         {
-            expMessage += $"<@{player.UserId}> got {exp} Exp.\n";
+            expMessage += $"<@{player.UserId}> got {exp:#,0} Exp.\n";
             
             var oldLevel = player.GetLevel();
 
@@ -394,7 +394,7 @@ public sealed class ZenGoService
             
             var newLevel = player.GetLevel();
 
-            if (newLevel > oldLevel) expMessage += $"<@{player.UserId}> leveled up from {oldLevel} to {newLevel}!\n";
+            if (newLevel > oldLevel) expMessage += $"<@{player.UserId}> leveled up from {oldLevel:#,0} to {newLevel:#,0}!\n";
         }
 
         await _database.UpdatePlayersAsync(players);
@@ -463,7 +463,8 @@ public sealed class ZenGoService
 
     private string GetAppearMessage(Monster monster, ChannelData channelData)
     {
-        return $"`{monster.Name}` is waiting...!\n\nrare: `{monster.Rare}`\n\nlevel `{channelData.MonsterLevel}` health `{channelData.MonsterHp}`";
+        return $"`{monster.Name}` is waiting...!\n\nrare: `{monster.Rare}`\n\n" +
+               $"level `{channelData.MonsterLevel:#,0}` health `{channelData.MonsterHp:#,0}`";
     }
 
     private async Task SaveBattleAsync(Player player, BattleData battleData, ChannelData channelData)
