@@ -27,7 +27,7 @@ public sealed class ZenGoService
         _monsters = JsonConvert.DeserializeObject<IReadOnlyList<Monster>>(text);
     }
 
-    public static IReadOnlyCollection<IItem> Items = new List<IItem> { new Elixir(), new FireBook() };
+    public static readonly IReadOnlyCollection<IItem> Items = new List<IItem> { new NfBook(), new FireBook(), new Elixir() };
 
     public async Task<IProcessResult> UseAttackAsync(IUser user, ITextChannel channel)
     {
@@ -125,8 +125,8 @@ public sealed class ZenGoService
         else
         {
             // 倒せたとき
-            var damageLog = $"{user.Mention} attacked to `{monster.Name}`!" +
-                $"`{monster.Name}` health: 0 ({damage:#,0} damage)";
+            var damageLog = $"{user.Mention} attacked to `{monster.Name}`!\n" +
+                            $"`{monster.Name}` health: 0 ({damage:#,0} damage)";
             
             return await SetWinAsync(damageLog, player, channelData, monster, channel);
         }
@@ -185,14 +185,14 @@ public sealed class ZenGoService
 
         Monster monster = _monsters.Single(x => x.Id == channelData.MonsterId);
         
-        var damage = GiveMagicDamage(level, channelData, monster, magic.MagicEffect);
+        var damage = GiveMagicDamage(level, channelData, magic);
 
         if (IsAlive(channelData))
         {
             // 倒せなかったとき
             await SaveBattleAsync(player, battleData, channelData);
 
-            var damageLog = $"{user.Mention} use {magic.DisplayName} to `{monster.Name}`!\n" +
+            var damageLog = $"{user.Mention} used `{magic.DisplayName}` to `{monster.Name}`!\n" +
                 $"`{monster.Name}` health: {channelData.MonsterHp:#,0} ({damage:#,0} damage)\n\n";
 
             return new AttackResult(damageLog);
@@ -200,10 +200,13 @@ public sealed class ZenGoService
         else
         {
             // 倒せたとき
-            var damageLog = $"{user.Mention} use {magic.DisplayName} to `{monster.Name}`!\n" +
-                $"`{monster.Name}` health: 0 ({damage:#,0} damage)";
+
             
-            return await SetWinAsync(damageLog, player, channelData, monster, channel);
+            var damageLog = damage == -1 
+                ? $"{user.Mention} used `{magic.DisplayName}` to `{monster.Name}`!\n`{monster.Name}` health: 0 (∞ damage)"
+                : $"{user.Mention} used `{magic.DisplayName}` to `{monster.Name}`!\n`{monster.Name}` health: 0 ({damage:#,0} damage)";
+            
+            return await SetWinAsync(damageLog, player, channelData, monster, channel, magic);
         }
     }
     
@@ -329,11 +332,18 @@ public sealed class ZenGoService
         return damage;
     }
     
-    private int GiveMagicDamage(int level, ChannelData channelData, Monster monster, double magicEffect = 1.0)
+    private int GiveMagicDamage(int level, ChannelData channelData, IMagic magic)
     {
         // ダメージを与える
+        if (magic is ISpecialEffect {IsKillable: true})
+        {
+            channelData.MonsterHp = 0;
+
+            return -1;
+        }
+        
         var random = new Random();
-        var damage = (int) ((random.NextDouble() / 2.5 + 0.6) * level * magicEffect);
+        var damage = (int) ((random.NextDouble() / 2.5 + 0.6) * level * magic.MagicEffect);
 
         channelData.MonsterHp -= damage;
 
@@ -356,12 +366,13 @@ public sealed class ZenGoService
         return damage;
     }
     
-    private async Task<DefeatResult> SetWinAsync(string damageLog, Player player, ChannelData channelData, Monster monster, ITextChannel channel)
+    private async Task<DefeatResult> SetWinAsync(string damageLog, Player player, ChannelData channelData, Monster monster,
+        ITextChannel channel, IItem item = null)
     {
         // 勝利処理
         var expMessage = await SetExpAndClearBattleAsync(player, channelData, monster, channel);
-        
-        Monster nextMonster = await NextMonsterAsync(channelData);
+
+        Monster nextMonster = await NextMonsterAsync(channelData, item is ISpecialEffect effect ? effect.Step : 1);
 
         return new DefeatResult(damageLog, expMessage, GetAppearMessage(nextMonster, channelData), nextMonster.ImageUrl);
     }
