@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Discord.Commands;
 using Newtonsoft.Json;
 using ZenGo.Core.Entities;
 using ZenGo.Core.Entities.Items;
@@ -79,20 +80,6 @@ public sealed class ZenGoService
         return await RankingAsync(user).ConfigureAwait(false);
     }
 
-    private async Task<(bool, BattleData)> IsValidBattleAsync(ulong userId, ulong channelId)
-    {
-        // 指定したチャンネルで戦闘中または非戦闘かどうか, かつ戦闘中のとき生きているか
-        var battle = await _database.FetchBattleDataAsync(userId);
-
-        return (battle is null || battle.ChannelId == channelId && IsAlive(battle), battle);
-    }
-
-    private static bool IsAlive(BattleData data)
-    {
-        // 戦闘中のとき生きているか
-        return data.UserHp > 0;
-    }
-
     private static bool IsAlive(ChannelData data)
     {
         // 敵が生きているか
@@ -102,9 +89,19 @@ public sealed class ZenGoService
     private async Task<IProcessResult> AttackAsync(IUser user, ITextChannel channel)
     {
         // 内部攻撃処理
-        var (isValid, battleData) = await IsValidBattleAsync(user.Id, channel.Id);
+        var battleData = await _database.FetchBattleDataAsync(user.Id);
         
-        if (!isValid) return new ErrorResult("Invalid Channel or Player's hp less than 0.");
+        if (battleData is not null)
+        {
+            if (battleData.ChannelId != channel.Id)
+            {
+                return new ErrorResult("違うチャンネルで戦闘中です。");
+            }
+            if (battleData.UserHp <= 0)
+            {
+                return new ErrorResult("もう倒れています!");
+            }
+        }
         
         Player player = await _database.FetchPlayerAsync(user.Id) ?? new Player(user.Id);
 
@@ -183,9 +180,19 @@ public sealed class ZenGoService
     private async Task<IProcessResult> MagicAsync(IUser user, ITextChannel channel, IMagic magic)
     {
         // 内部FB処理
-        var (isValid, battleData) = await IsValidBattleAsync(user.Id, channel.Id);
+        var battleData = await _database.FetchBattleDataAsync(user.Id);
         
-        if (!isValid) return new ErrorResult("Invalid Channel or Player's hp less than 0.");
+        if (battleData is not null)
+        {
+            if (battleData.ChannelId != channel.Id)
+            {
+                return new ErrorResult("違うチャンネルで戦闘中です。");
+            }
+            if (battleData.UserHp <= 0)
+            {
+                return new ErrorResult("もう倒れています!");
+            }
+        }
         
         Player player = await _database.FetchPlayerAsync(user.Id) ?? new Player(user.Id);
 
