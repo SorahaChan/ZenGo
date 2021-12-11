@@ -127,8 +127,11 @@ public sealed class ZenGoService
             await SaveBattleAsync(player, battleData, channelData);
 
             var damageLog =
-                $"{user.Mention} attacked to `{monster.Name}`!\n`{monster.Name}` health: {channelData.MonsterHp} ({damage} damage)\n\n" +
-                $"`{monster.Name}` attacked to {user.Mention}!\n{user.Mention} health: {battleData.UserHp} / {player.GetDefaultHp()} ({receive} damage)\n\n";
+                $"{user.Mention} attacked to `{monster.Name}`!\n`{monster.Name}` " +
+                $"health: {channelData.MonsterHp:#,0} ({damage:#,0} damage)\n\n" +
+                
+                $"`{monster.Name}` attacked to {user.Mention}!\n{user.Mention} " +
+                $"health: {battleData.UserHp:#,0} / {player.GetDefaultHp():#,0} ({receive:#,0} damage)\n\n";
 
             return new AttackResult(damageLog);
         }
@@ -366,23 +369,23 @@ public sealed class ZenGoService
         return new RankingResult("Player Ranking\n\n" + message);
     }
     
-    private int GiveDamage(int level, ChannelData channelData, Monster monster)
+    private long GiveDamage(int level, ChannelData channelData, Monster monster)
     {
         // ダメージを与える
         var random = new Random();
         var damage = monster.Rare switch
         {
-            MonsterRare.Strong => (int) ((random.NextDouble() / 2.5 + 0.8) * level),
-            MonsterRare.Unknown => (int) (level * (random.NextSingle() / 10) + 10 + level),
-            _ => (int) ((random.NextDouble() / 2.5 + 1.0) * level)
+            MonsterRare.Strong => (long) ((random.NextDouble() / 2.5 + 0.8) * level),
+            MonsterRare.Unknown => (long) (level * (random.NextSingle() / 10) + 10 + level),
+            _ => (long) ((random.NextDouble() / 2.5 + 1.0) * level)
         };
 
-        channelData.MonsterHp -= damage;
+        channelData.MonsterHp -= damage >= 0 ? damage : 0;
 
         return damage;
     }
     
-    private int GiveMagicDamage(int level, ChannelData channelData, IMagic magic)
+    private long GiveMagicDamage(int level, ChannelData channelData, IMagic magic)
     {
         // ダメージを与える
         if (magic is ISpecialEffect {IsKillable: true})
@@ -393,23 +396,25 @@ public sealed class ZenGoService
         }
         
         var random = new Random();
-        var damage = (int) ((random.NextDouble() / 2.5 + 0.6) * level * magic.MagicEffect);
+        var damage = (long) ((random.NextDouble() / 2.5 + 0.6) * level * magic.MagicEffect);
 
-        channelData.MonsterHp -= damage;
+        channelData.MonsterHp -= damage >= 0 ? damage : 0;
 
         return damage;
     }
     
-    private int ReceiveDamage(BattleData battleData, ChannelData channelData, Monster monster)
+    private long ReceiveDamage(BattleData battleData, ChannelData channelData, Monster monster)
     {
         // ダメージを受け取る
         var random = new Random();
         var damage = monster.Rare switch
         {
-            MonsterRare.Strong => (int) (channelData.MonsterLevel * (1 + random.NextSingle()) * 1.5),
-            MonsterRare.Unknown => (int) (channelData.MonsterLevel * (1 + random.NextSingle()) * 10),
-            _ => (int) (channelData.MonsterLevel * (1 + random.NextSingle()) + 5)
+            MonsterRare.Strong => (long) (channelData.MonsterLevel * (1 + random.NextSingle()) * 1.5),
+            MonsterRare.Unknown => (long) (channelData.MonsterLevel * (1 + random.NextSingle()) * 10),
+            _ => (long) (channelData.MonsterLevel * (1 + random.NextSingle()) + 5)
         };
+
+        damage = damage >= 0 ? damage : 0;
 
         battleData.UserHp -= battleData.UserHp < damage ? battleData.UserHp : damage;
 
