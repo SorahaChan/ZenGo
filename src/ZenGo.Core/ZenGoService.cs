@@ -368,14 +368,17 @@ public sealed class ZenGoService
         ITextChannel channel, IItem item = null)
     {
         // 勝利処理
-        var expMessage = await SetExpAndClearBattleAsync(player, channelData, monster, channel);
+        var step = item is ISpecialEffect effect ? effect.Step : 1;
+        
+        var expMessage = await SetExpAndClearBattleAsync(player, channelData, monster, channel, step);
 
-        Monster nextMonster = await NextMonsterAsync(channelData, item is ISpecialEffect effect ? effect.Step : 1);
+        Monster nextMonster = await NextMonsterAsync(channelData, step);
 
         return new DefeatResult(damageLog, expMessage, GetAppearMessage(nextMonster, channelData), nextMonster.ImageUrl);
     }
     
-    private async Task<string> SetExpAndClearBattleAsync(Player lastAttacker, ChannelData channelData, Monster monster, ITextChannel channel)
+    private async Task<string> SetExpAndClearBattleAsync(Player lastAttacker, ChannelData channelData, Monster monster,
+        ITextChannel channel, int step = 1)
     {
         // 経験値付与処理
         string expMessage = $"`{monster.Name}` has been defeated!\n\n";
@@ -396,11 +399,11 @@ public sealed class ZenGoService
 
         foreach (var player in players)
         {
-            expMessage += $"<@{player.UserId}> got {exp:#,0} Exp.\n";
+            expMessage += $"<@{player.UserId}> got {exp * step:#,0} Exp.\n";
             
             var oldLevel = player.GetLevel();
 
-            player.Exp += exp;
+            player.Exp += exp * step;
             
             var newLevel = player.GetLevel();
 

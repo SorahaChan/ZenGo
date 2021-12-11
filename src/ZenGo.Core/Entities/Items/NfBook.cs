@@ -13,5 +13,5 @@ public class NfBook: IMagic, ISpecialEffect
 
     public bool IsKillable { get; } = true;
 
-    public int Step { get; } = 100;
+    public int Step { get; } = 1000;
 }
