@@ -73,6 +73,11 @@ public sealed class ZenGoService
     {
         return await RankingAsync(getChannelMethod, getGuildMethod).ConfigureAwait(false);
     }
+    
+    public async Task<IProcessResult> UseRankingAsync(Func<ulong, IUser> user)
+    {
+        return await RankingAsync(user).ConfigureAwait(false);
+    }
 
     private async Task<(bool, BattleData)> IsValidBattleAsync(ulong userId, ulong channelId)
     {
@@ -323,7 +328,7 @@ public sealed class ZenGoService
     {
         var message = String.Empty;
         
-        var channels = await _database.FetchChannelDataRankingAsync(0);
+        var channels = await _database.FetchChannelDataRankingAsync();
 
         foreach (var channelData in channels)
         {
@@ -333,7 +338,7 @@ public sealed class ZenGoService
             var channel = getChannel(channelData.ChannelId);
             var channelName = channel is null ? $"{channelData.ChannelId}" : FixName(channel.Name);
 
-            message += $"`{channelName}` in `{guildName}`:  lv.`{channelData.MonsterLevel:#,0}`\n\n";
+            message += $"`{channelName}` in `{guildName}`:  `lv.{channelData.MonsterLevel:#,0}`\n\n";
         }
 
         return new RankingResult("Channel Ranking\n\n" + message);
@@ -342,6 +347,23 @@ public sealed class ZenGoService
         {
             return name.Replace("`", "").Replace("http", "").Replace("discord", "");
         }
+    }
+    
+    private async Task<IProcessResult> RankingAsync(Func<ulong, IUser> getUser)
+    {
+        var message = String.Empty;
+        
+        var players = await _database.FetchPlayersRankingAsync();
+
+        foreach (var player in players)
+        {
+            var user = getUser(player.UserId);
+            var userName = user is null ? $"{player.UserId}" : $"{user.Username}#{user.Discriminator}";
+            
+            message += $"`{userName}`:  `lv.{player.GetLevel():#,0}`\n\n";
+        }
+
+        return new RankingResult("Player Ranking\n\n" + message);
     }
     
     private int GiveDamage(int level, ChannelData channelData, Monster monster)

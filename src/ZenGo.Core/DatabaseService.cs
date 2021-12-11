@@ -30,6 +30,14 @@ internal sealed class DatabaseService
         }
     }
     
+    internal async Task<List<Player>> FetchPlayersRankingAsync(int index = 0)
+    {
+        using (var context = new DatabaseContext(_mariaDbConnection))
+        {
+            return await context.Players.OrderByDescending(e => e.Exp).Skip(index * 10).Take(10).ToListAsync();
+        }
+    }
+    
     internal async Task<int> UpdatePlayerAsync(Player model)
     {
         using (var context = new DatabaseContext(_mariaDbConnection))
@@ -223,7 +231,7 @@ internal sealed class DatabaseService
         }
     }
     
-    internal async Task<List<ChannelData>> FetchChannelDataRankingAsync(int index)
+    internal async Task<List<ChannelData>> FetchChannelDataRankingAsync(int index = 0)
     {
         using (var context = new DatabaseContext(_mariaDbConnection))
         {

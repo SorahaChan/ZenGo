@@ -111,4 +111,21 @@ public class BaseCommand: ModuleBase<SocketCommandContext>
             await Context.SendResultAsync(result);
         }
     }
+    
+    [RequireGuild]
+    [Alias("prank", "pr"), Command("prankng", RunMode = RunMode.Async)]
+    public async Task PlayerRankingAsync()
+    {
+        if (_cooldown.IsCooldown(Context.User.Id))
+        {
+            await Context.Message.ReplyAsync("Under Cooldown");
+        }
+        else
+        {
+            _cooldown.SetCooldown(Context.User.Id);
+            
+            var result = await _zenGo.UseRankingAsync(x => _client.GetUser(x));
+            await Context.SendResultAsync(result);
+        }
+    }
 }
