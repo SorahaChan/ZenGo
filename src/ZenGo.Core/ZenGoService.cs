@@ -200,8 +200,6 @@ public sealed class ZenGoService
         else
         {
             // 倒せたとき
-
-            
             var damageLog = damage == -1 
                 ? $"{user.Mention} used `{magic.DisplayName}` to `{monster.Name}`!\n`{monster.Name}` health: 0 (∞ damage)"
                 : $"{user.Mention} used `{magic.DisplayName}` to `{monster.Name}`!\n`{monster.Name}` health: 0 ({damage:#,0} damage)";

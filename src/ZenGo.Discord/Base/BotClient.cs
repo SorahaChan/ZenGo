@@ -40,7 +40,7 @@ public class BotClient
         await _client.LoginAsync(TokenType.Bot, BotInformation.DiscordToken);
         await _client.StartAsync();
 
-        await _client.SetActivityAsync(new Game($"prefix z | ver.{BotInformation.BotVersion}"));
+        await _client.SetActivityAsync(new Game($"prefix {BotInformation.CommandPrefix} | ver.{BotInformation.BotVersion}"));
     }
 
     private IServiceProvider BuildProvider()
