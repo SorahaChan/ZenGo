@@ -14,8 +14,8 @@ public sealed class ZenGoService
 
     private static IReadOnlyList<Monster> _monsters;
 
-    private const double RareRate = 0.05;
-
+    private const double RareRate = 0.1;
+    
     private const double UnknownRate = 0.001;
 
     public ZenGoService(ZenGoServiceConfig config)
@@ -271,7 +271,7 @@ public sealed class ZenGoService
         }
         else
         {
-            message = list.Aggregate(message, (x, battleData) => x + $"<@{battleData.UserId}> hp `{battleData.UserHp}`\n");
+            message = list.Aggregate(message, (x, battleData) => x + $"<@{battleData.UserId}> hp `{battleData.UserHp:#,0}`\n");
 
             return new InquiryResult(message, monster.ImageUrl);
         }
@@ -318,9 +318,9 @@ public sealed class ZenGoService
         var random = new Random();
         var damage = monster.Rare switch
         {
-            MonsterRare.Strong => (int) (level * (random.NextSingle() / 2) + 10 + level),
+            MonsterRare.Strong => (int) ((random.NextDouble() / 2.5 + 0.8) * level),
             MonsterRare.Unknown => (int) (level * (random.NextSingle() / 10) + 10 + level),
-            _ => (int) (level * (random.NextSingle() / 1.5) + 10 + level)
+            _ => (int) ((random.NextDouble() / 2.5 + 1.0) * level)
         };
 
         channelData.MonsterHp -= damage;
@@ -345,9 +345,9 @@ public sealed class ZenGoService
         var random = new Random();
         var damage = monster.Rare switch
         {
-            MonsterRare.Strong => (int) (channelData.MonsterLevel * (1 + random.NextSingle()) * 2),
+            MonsterRare.Strong => (int) (channelData.MonsterLevel * (1 + random.NextSingle()) * 1.5),
             MonsterRare.Unknown => (int) (channelData.MonsterLevel * (1 + random.NextSingle()) * 10),
-            _ => (int) (channelData.MonsterLevel * (2 + random.NextSingle()) + 5)
+            _ => (int) (channelData.MonsterLevel * (1 + random.NextSingle()) + 5)
         };
 
         battleData.UserHp -= battleData.UserHp < damage ? battleData.UserHp : damage;
@@ -378,9 +378,9 @@ public sealed class ZenGoService
 
         var exp = monster.Rare switch
         {
-            MonsterRare.Strong => channelData.MonsterLevel * 5,
-            MonsterRare.Rare => channelData.MonsterLevel * 10,
-            MonsterRare.Unknown => channelData.MonsterLevel * 100,
+            MonsterRare.Strong => channelData.MonsterLevel * 10,
+            MonsterRare.Rare => channelData.MonsterLevel * 20,
+            MonsterRare.Unknown => channelData.MonsterLevel * 200,
             _ => channelData.MonsterLevel
         };
 
@@ -426,7 +426,7 @@ public sealed class ZenGoService
         
         channelData.MonsterHp = monster.Rare switch  
             {
-                MonsterRare.Rare => channelData.MonsterLevel * 10 + 50,
+                MonsterRare.Rare => channelData.MonsterLevel * 25 + 50,
                 MonsterRare.Unknown => channelData.MonsterLevel * 100 + 50,
                 _ => channelData.MonsterLevel * 5 + 50
             };
@@ -449,7 +449,7 @@ public sealed class ZenGoService
         
         channelData.MonsterHp = monster.Rare switch
         {
-            MonsterRare.Rare => channelData.MonsterLevel * 10 + 50,
+            MonsterRare.Rare => channelData.MonsterLevel * 25 + 50,
             MonsterRare.Unknown => channelData.MonsterLevel * 100 + 50,
             _ => channelData.MonsterLevel * 5 + 50
         };
