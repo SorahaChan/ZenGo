@@ -125,7 +125,8 @@ public sealed class ZenGoService
         else
         {
             // 倒せたとき
-            var damageLog = $"{user.Mention} attacked to `{monster.Name}`! `{monster.Name}` health: 0 ({damage} damage)";
+            var damageLog = $"{user.Mention} attacked to `{monster.Name}`!" +
+                $"`{monster.Name}` health: 0 ({damage:#,0} damage)";
             
             return await SetWinAsync(damageLog, player, channelData, monster, channel);
         }
