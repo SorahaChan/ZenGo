@@ -268,7 +268,7 @@ public sealed class ZenGoService
         Monster monster = _monsters.Single(x => x.Id == channelData.MonsterId);
 
         var message = $"Inquiry of {channel.Mention}\n\n`{monster.Name}`\n\n" +
-                      $"level `{channelData.MonsterLevel}` health `{channelData.MonsterHp}`\n\n";
+                      $"level `{channelData.MonsterLevel:#,0}` health `{channelData.MonsterHp:#,0}`\n\n";
 
         List<BattleData> list = await _database.FetchBattleDataListAsync(channel.Id);
         if (list is null || list.Count == 0)
