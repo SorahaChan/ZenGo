@@ -223,6 +223,14 @@ internal sealed class DatabaseService
         }
     }
     
+    internal async Task<List<ChannelData>> FetchChannelDataRankingAsync(int index)
+    {
+        using (var context = new DatabaseContext(_mariaDbConnection))
+        {
+            return await context.ChannelDataSet.OrderByDescending(e => e.MonsterLevel).Skip(index * 10).Take(10).ToListAsync();
+        }
+    }
+    
     internal async Task<int> UpdateChannelDataAsync(ChannelData model)
     {
         using (var context = new DatabaseContext(_mariaDbConnection))

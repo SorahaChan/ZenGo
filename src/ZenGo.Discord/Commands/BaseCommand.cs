@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 using ZenGo.Core;
 using ZenGo.Discord.Attributes;
 using ZenGo.Discord.Helpers;
@@ -9,12 +10,16 @@ namespace ZenGo.Discord.Commands;
 
 public class BaseCommand: ModuleBase<SocketCommandContext>
 {
+    private readonly DiscordSocketClient _client;
+    
     private readonly ZenGoService _zenGo;
     
     private readonly CooldownService _cooldown;
     
-    public BaseCommand(ZenGoService zenGo, CooldownService cooldown)
+    public BaseCommand(DiscordSocketClient client, ZenGoService zenGo, CooldownService cooldown)
     {
+        _client = client;
+        
         _zenGo = zenGo;
 
         _cooldown = cooldown;
@@ -88,5 +93,22 @@ public class BaseCommand: ModuleBase<SocketCommandContext>
         var result = await _zenGo.UseProfileAsync(user);
 
         await Context.SendResultAsync(result);
+    }
+    
+    [RequireGuild]
+    [Alias("rank"), Command("rankng", RunMode = RunMode.Async)]
+    public async Task RankingAsync()
+    {
+        if (_cooldown.IsCooldown(Context.User.Id))
+        {
+            await Context.Message.ReplyAsync("Under Cooldown");
+        }
+        else
+        {
+            _cooldown.SetCooldown(Context.User.Id);
+            
+            var result = await _zenGo.UseRankingAsync(x => _client.GetChannel(x), x => _client.GetGuild(x));
+            await Context.SendResultAsync(result);
+        }
     }
 }

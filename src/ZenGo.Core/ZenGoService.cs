@@ -68,6 +68,11 @@ public sealed class ZenGoService
     {
         return await ProfileAsync(user).ConfigureAwait(false);
     }
+    
+    public async Task<IProcessResult> UseRankingAsync(Func<ulong, IChannel> getChannelMethod, Func<ulong, IGuild> getGuildMethod)
+    {
+        return await RankingAsync(getChannelMethod, getGuildMethod).ConfigureAwait(false);
+    }
 
     private async Task<(bool, BattleData)> IsValidBattleAsync(ulong userId, ulong channelId)
     {
@@ -312,6 +317,31 @@ public sealed class ZenGoService
         }
 
         return new ProfileResult(message);
+    }
+
+    private async Task<IProcessResult> RankingAsync(Func<ulong, IChannel> getChannel, Func<ulong, IGuild> getGuild)
+    {
+        var message = String.Empty;
+        
+        var channels = await _database.FetchChannelDataRankingAsync(0);
+
+        foreach (var channelData in channels)
+        {
+            var guild = getGuild(channelData.GuildId);
+            var guildName = guild is null ? $"{channelData.GuildId}" : FixName(guild.Name);
+            
+            var channel = getChannel(channelData.ChannelId);
+            var channelName = channel is null ? $"{channelData.ChannelId}" : FixName(channel.Name);
+
+            message += $"`{channelName}` in `{guildName}`:  lv.`{channelData.MonsterLevel:#,0}`\n\n";
+        }
+
+        return new RankingResult("Channel Ranking\n\n" + message);
+
+        string FixName(string name)
+        {
+            return name.Replace("`", "").Replace("http", "").Replace("discord", "");
+        }
     }
     
     private int GiveDamage(int level, ChannelData channelData, Monster monster)
