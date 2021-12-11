@@ -56,7 +56,7 @@ public class BotClient
                 DatabaseConnection = BotInformation.DatabaseConnection,
                 MonsterJsonPath = AppContext.BaseDirectory + "assets/monster.json"
             }))
-            .AddSingleton(new CooldownService(3000))
+            .AddSingleton(new CooldownService(1000))
             .AddSingleton<CommandHandler>()
             .AddSingleton<LoggingHandler>()
             .BuildServiceProvider();
