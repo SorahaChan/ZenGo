@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30114.105
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZenGo.Core", "src\ZenGo.Core\ZenGo.Core.csproj", "{8A2B1089-3C2D-40AA-AF45-3B91D2D6208A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZenGo.Discord", "src\ZenGo.Discord\ZenGo.Discord.csproj", "{19D5BF7C-06D4-44CE-8DA1-594989E33CFD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8A2B1089-3C2D-40AA-AF45-3B91D2D6208A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A2B1089-3C2D-40AA-AF45-3B91D2D6208A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A2B1089-3C2D-40AA-AF45-3B91D2D6208A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A2B1089-3C2D-40AA-AF45-3B91D2D6208A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{19D5BF7C-06D4-44CE-8DA1-594989E33CFD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19D5BF7C-06D4-44CE-8DA1-594989E33CFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{19D5BF7C-06D4-44CE-8DA1-594989E33CFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{19D5BF7C-06D4-44CE-8DA1-594989E33CFD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
