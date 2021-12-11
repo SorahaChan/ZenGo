@@ -32,15 +32,7 @@ public sealed class ZenGoService
     public async Task<IProcessResult> UseAttackAsync(IUser user, ITextChannel channel)
     {
         // 攻撃こまんど
-        var (isValidBattle, battle) = await IsValidBattleAsync(user.Id, channel.Id).ConfigureAwait(false);
-        if (isValidBattle)
-        {
-            return await AttackAsync(battle, user, channel).ConfigureAwait(false);
-        }
-        else
-        {
-            return new ErrorResult("Invalid Channel or Player's hp less than 0.");
-        }
+        return await AttackAsync(user, channel).ConfigureAwait(false);
     }
 
     public async Task<IProcessResult> UseItemAsync(IUser user, ITextChannel channel, IItem item)
@@ -97,13 +89,17 @@ public sealed class ZenGoService
         return data.MonsterHp > 0;
     }
     
-    private async Task<IProcessResult> AttackAsync(BattleData battleData, IUser user, ITextChannel channel)
+    private async Task<IProcessResult> AttackAsync(IUser user, ITextChannel channel)
     {
         // 内部攻撃処理
+        var (isValid, battleData) = await IsValidBattleAsync(user.Id, channel.Id);
+        
+        if (!isValid) return new ErrorResult("Invalid Channel or Player's hp less than 0.");
+        
         Player player = await _database.FetchPlayerAsync(user.Id) ?? new Player(user.Id);
 
         var level = player.GetLevel();
-
+        
         battleData ??= new BattleData(user.Id, channel.Id, player.GetDefaultHp());
 
         ChannelData channelData = await _database.FetchChannelDataAsync(channel.Id)

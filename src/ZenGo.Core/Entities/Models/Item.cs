@@ -15,7 +15,7 @@ public class Item
         this.Quantity = quantity;
     }
     
-    [Required, Key, Column("id")]
+    [Required, Key, Column("id", TypeName = "char(42)")]
     public string Id { get; set; }
     
     [Required, Column("user_id")]
