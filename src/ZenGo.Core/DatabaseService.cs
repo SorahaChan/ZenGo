@@ -17,7 +17,7 @@ internal sealed class DatabaseService
     {
         using (var context = new DatabaseContext(_mariaDbConnection))
         {
-            return await context.Players.SingleOrDefaultAsync(x => x.UserId == userId);
+            return await context.Players.SingleOrDefaultAsync(e => e.UserId == userId);
         }
     }
     
@@ -26,7 +26,7 @@ internal sealed class DatabaseService
         var ids = battleDataSet.Select(x => x.UserId);
         using (var context = new DatabaseContext(_mariaDbConnection))
         {
-            return await context.Players.Where(x => ids.Contains(x.UserId)).ToListAsync();
+            return await context.Players.Where(e => ids.Contains(e.UserId)).ToListAsync();
         }
     }
     
@@ -61,7 +61,7 @@ internal sealed class DatabaseService
     {
         using (var context = new DatabaseContext(_mariaDbConnection))
         {
-            return await context.Items.FirstOrDefaultAsync(x => x.UserId == userId && x.ItemId == itemId);
+            return await context.Items.FirstOrDefaultAsync(e => e.UserId == userId && e.ItemId == itemId);
         }
     }
 
@@ -75,9 +75,11 @@ internal sealed class DatabaseService
     
     internal async Task<int> UpdateItemAsync(Item model)
     {
+        model.Id = $"{model.UserId}_{model.ItemId}";
+        
         using (var context = new DatabaseContext(_mariaDbConnection))
         {
-            context.Entry(model).State = context.Items.Any(e => e.UserId == model.UserId)
+            context.Entry(model).State = context.Items.Any(e => e.Id == model.Id)
                 ? EntityState.Modified
                 : EntityState.Added;
 
@@ -89,7 +91,7 @@ internal sealed class DatabaseService
     {
         using (var context = new DatabaseContext(_mariaDbConnection))
         {
-            return await context.Weapons.Where(x => x.UserId == userId).ToListAsync();
+            return await context.Weapons.Where(e => e.UserId == userId).ToListAsync();
         }
     }
     
@@ -109,7 +111,7 @@ internal sealed class DatabaseService
     {
         using (var context = new DatabaseContext(_mariaDbConnection))
         {
-            return await context.Armors.Where(x => x.UserId == userId).ToListAsync();
+            return await context.Armors.Where(e => e.UserId == userId).ToListAsync();
         }
     }
     
@@ -129,7 +131,7 @@ internal sealed class DatabaseService
     {
         using (var context = new DatabaseContext(_mariaDbConnection))
         {
-            return await context.BattleDataSet.SingleOrDefaultAsync(x => x.UserId == userId);
+            return await context.BattleDataSet.SingleOrDefaultAsync(e => e.UserId == userId);
         }
     }
 
@@ -137,7 +139,7 @@ internal sealed class DatabaseService
     {
         using (var context = new DatabaseContext(_mariaDbConnection))
         {
-            return await context.BattleDataSet.Where(x => x.ChannelId == channelId).ToListAsync();
+            return await context.BattleDataSet.Where(e => e.ChannelId == channelId).ToListAsync();
         }
     }
     
@@ -199,7 +201,7 @@ internal sealed class DatabaseService
     {
         using (var context = new DatabaseContext(_mariaDbConnection))
         {
-            context.BattleDataSet.RemoveRange(context.BattleDataSet.Where(x => x.ChannelId == channelId));
+            context.BattleDataSet.RemoveRange(context.BattleDataSet.Where(e => e.ChannelId == channelId));
 
             return await context.SaveChangesAsync();
         }
@@ -209,7 +211,7 @@ internal sealed class DatabaseService
     {
         using (var context = new DatabaseContext(_mariaDbConnection))
         {
-            return await context.ChannelDataSet.SingleOrDefaultAsync(x => x.ChannelId == channelId);
+            return await context.ChannelDataSet.SingleOrDefaultAsync(e => e.ChannelId == channelId);
         }
     }
     
@@ -217,7 +219,7 @@ internal sealed class DatabaseService
     {
         using (var context = new DatabaseContext(_mariaDbConnection))
         {
-            return await context.ChannelDataSet.Where(x => x.ChannelId == guildId).ToListAsync();
+            return await context.ChannelDataSet.Where(e => e.ChannelId == guildId).ToListAsync();
         }
     }
     

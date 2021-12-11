@@ -2,7 +2,7 @@
 
 public class Elixir: IItem
 {
-    public string DisplayName { get; } = "elixir";
+    public string DisplayName { get; } = "Elixir";
 
     public int Id { get; } = 3;
 

@@ -41,9 +41,17 @@ public class BaseCommand: ModuleBase<SocketCommandContext>
     [Alias("i", "use", "u"), Command("item", RunMode = RunMode.Async)]
     public async Task ItemAsync(string itemName)
     {
-        var result = await _zenGo.UseItemAsync(Context.User, (ITextChannel) Context.Channel, itemName);
-
-        await Context.SendResultAsync(result);
+        if (_cooldown.IsCooldown(Context.User.Id))
+        {
+            await Context.Message.ReplyAsync("Under Cooldown");
+        }
+        else
+        {
+            _cooldown.SetCooldown(Context.User.Id);
+            
+            var result = await _zenGo.UseItemAsync(Context.User, (ITextChannel) Context.Channel, itemName);
+            await Context.SendResultAsync(result);
+        }
     }
     
     [RequireGuild]

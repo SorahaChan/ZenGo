@@ -11,9 +11,11 @@ CREATE TABLE `players` (
                            PRIMARY KEY (`user_id`)
 );
 CREATE TABLE `items` (
+    
                          `user_id` BIGINT unsigned NOT NULL,
                          `item_id` INT NOT NULL,
                          `quantity` INT NOT NULL,
+                         PRIMARY KEY (`user_id`),
                          KEY `user_index` (`user_id`) USING BTREE
 );
 CREATE TABLE `weapons` (

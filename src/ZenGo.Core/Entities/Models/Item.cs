@@ -7,12 +7,16 @@ namespace ZenGo.Core.Entities.Models;
 [Table("items"), Index(nameof(UserId))]
 public class Item
 {
-    public Item(ulong userId, int itemId, int quantity)
+    public Item(string id, ulong userId, int itemId, int quantity)
     {
+        this.Id = id;
         this.UserId = userId;
         this.ItemId = itemId;
         this.Quantity = quantity;
     }
+    
+    [Required, Key, Column("id")]
+    public string Id { get; set; }
     
     [Required, Column("user_id")]
     public ulong UserId { get; set; }

@@ -27,7 +27,7 @@ public sealed class ZenGoService
         _monsters = JsonConvert.DeserializeObject<IReadOnlyList<Monster>>(text);
     }
 
-    public static IReadOnlyCollection<IItem> Items = new List<IItem> { new Elixir() };
+    public static IReadOnlyCollection<IItem> Items = new List<IItem> { new Elixir(), new FireBook() };
 
     public async Task<IProcessResult> UseAttackAsync(IUser user, ITextChannel channel)
     {
@@ -121,15 +121,15 @@ public sealed class ZenGoService
             await SaveBattleAsync(player, battleData, channelData);
 
             var damageLog =
-                $"{user.Mention} attacked to `{monster.Name}`!\n`{monster.Name}` health: {channelData.MonsterHp} ( {damage} damage )\n\n" +
-                $"`{monster.Name}` attacked to {user.Mention}!\n{user.Mention} health: {battleData.UserHp} / {player.GetDefaultHp()} ( {receive} damage )\n\n";
+                $"{user.Mention} attacked to `{monster.Name}`!\n`{monster.Name}` health: {channelData.MonsterHp} ({damage} damage)\n\n" +
+                $"`{monster.Name}` attacked to {user.Mention}!\n{user.Mention} health: {battleData.UserHp} / {player.GetDefaultHp()} ({receive} damage)\n\n";
 
             return new AttackResult(damageLog);
         }
         else
         {
             // 倒せたとき
-            var damageLog = $"{user.Mention} attacked to `{monster.Name}`! `{monster.Name}` health: 0 ( {damage} damage )";
+            var damageLog = $"{user.Mention} attacked to `{monster.Name}`! `{monster.Name}` health: 0 ({damage} damage)";
             
             return await SetWinAsync(damageLog, player, channelData, monster, channel);
         }
@@ -141,14 +141,17 @@ public sealed class ZenGoService
         var itemDb = await _database.FetchItemAsync(user.Id, item.Id);
 
         if (itemDb is null || itemDb.Quantity == 0) return new ErrorResult($"You don't have {item.DisplayName}.");
-        
+
         var result = item switch
         {
+            IMagic magic => await MagicAsync(user, channel, magic),
+            
             Elixir => await ElixirAsync(channel),
+            
             _ => new ErrorResult("Unknown Item")
         };
 
-        if (result is not ErrorResult || item.IsDecrease)
+        if (result is not ErrorResult && item.IsDecrease)
         {
             itemDb.Quantity -= step;
 
@@ -163,8 +166,47 @@ public sealed class ZenGoService
         // 内部攻撃アイテム処理
         switch (item)
         {
-            default:
-                return new ErrorResult("Unknown Item");
+            default: return new ErrorResult("Unknown Item");
+        }
+    }
+
+    private async Task<IProcessResult> MagicAsync(IUser user, ITextChannel channel, IMagic magic)
+    {
+        // 内部FB処理
+        var (isValid, battleData) = await IsValidBattleAsync(user.Id, channel.Id);
+        
+        if (!isValid) return new ErrorResult("Invalid Channel or Player's hp less than 0.");
+        
+        Player player = await _database.FetchPlayerAsync(user.Id) ?? new Player(user.Id);
+
+        var level = player.GetLevel();
+        
+        battleData ??= new BattleData(user.Id, channel.Id, player.GetDefaultHp());
+
+        ChannelData channelData = await _database.FetchChannelDataAsync(channel.Id)
+                                  ?? new ChannelData(channel.Id, channel.GuildId, 1, 1, 55);
+
+        Monster monster = _monsters.Single(x => x.Id == channelData.MonsterId);
+        
+        var damage = GiveMagicDamage(level, channelData, monster, magic.MagicEffect);
+
+        if (IsAlive(channelData))
+        {
+            // 倒せなかったとき
+            await SaveBattleAsync(player, battleData, channelData);
+
+            var damageLog = $"{user.Mention} use {magic.DisplayName} to `{monster.Name}`!\n" +
+                $"`{monster.Name}` health: {channelData.MonsterHp:#,0} ({damage:#,0} damage)\n\n";
+
+            return new AttackResult(damageLog);
+        }
+        else
+        {
+            // 倒せたとき
+            var damageLog = $"{user.Mention} use {magic.DisplayName} to `{monster.Name}`!\n" +
+                $"`{monster.Name}` health: 0 ({damage:#,0} damage)";
+            
+            return await SetWinAsync(damageLog, player, channelData, monster, channel);
         }
     }
     
@@ -284,6 +326,17 @@ public sealed class ZenGoService
             MonsterRare.Unknown => (int) (level * (random.NextSingle() / 10) + 10 + level),
             _ => (int) (level * (random.NextSingle() / 1.5) + 10 + level)
         };
+
+        channelData.MonsterHp -= damage;
+
+        return damage;
+    }
+    
+    private int GiveMagicDamage(int level, ChannelData channelData, Monster monster, double magicEffect = 1.0)
+    {
+        // ダメージを与える
+        var random = new Random();
+        var damage = (int) ((random.NextDouble() / 2.5 + 0.6) * level * magicEffect);
 
         channelData.MonsterHp -= damage;
 
